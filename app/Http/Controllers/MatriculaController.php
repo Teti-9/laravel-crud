@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Matricula;
 use App\Http\Requests\StoreMatriculaRequest;
+use App\Http\Resources\MatriculaResource;
 
 class MatriculaController extends Controller
 {
@@ -19,16 +20,7 @@ class MatriculaController extends Controller
             ], 404);
         }
 
-        return response()->json($matriculas->map(function ($matricula) {
-            return [
-                'ID Da Matrícula' => $matricula->id,
-                'Aluno' => ['ID' => $matricula->aluno->id, 'Nome' => $matricula->aluno->nome],
-                'Plano (Dias)' => $matricula->tipo_do_plano,
-                'Status' => $matricula->status_da_matricula,
-                'Matrícula' => $matricula->matricula_formatada,
-                'Vencimento' => $matricula->vencimento_formatado,
-            ];
-        }));
+        return MatriculaResource::collection($matriculas);
     }
 
     public function store(StoreMatriculaRequest $request)
@@ -55,14 +47,7 @@ class MatriculaController extends Controller
 
             $matricula = Matricula::findOrFail($id);
 
-            return response()->json([
-                'ID Da Matrícula' => $matricula->id,
-                'Aluno' => ['ID' => $matricula->aluno->id, 'Nome' => $matricula->aluno->nome],
-                'Plano (Dias)' => $matricula->tipo_do_plano,
-                'Status' => $matricula->status_da_matricula,
-                'Matrícula' => $matricula->matricula_formatada,
-                'Vencimento' => $matricula->vencimento_formatado,
-            ]);
+            return new MatriculaResource($matricula);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'message' => 'Matrícula não encontrada.'

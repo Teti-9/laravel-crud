@@ -8,7 +8,7 @@ Um CRUD desenvolvido em PHP utilizando o framework Laravel em conjunto com o ban
 
 - 📌 **Matrículas:** CRUD (Criar, Ler, Atualizar, Deletar) de matrículas.  
 
-- 📌 **Relacionamentos e Validações**: Aluno-Matrícula e FormRequests.
+- 📌 **Relacionamentos e Validações**: Aluno-Matrícula, FormRequests e JsonResources.
 
 ## 🛠️ Instalação, Configuração e Execução
 
@@ -42,9 +42,12 @@ app/
 │   ├── Controllers/
 │   │   ├── AlunoController.php
 │   │   └── MatriculaController.php
-│   └── Requests/
-│       ├── StoreAlunoRequest.php
-│       └── StoreMatriculaRequest.php
+│   ├── Requests/
+│   │   ├── StoreAlunoRequest.php
+│   │   └── StoreMatriculaRequest.php
+│   └── Resources/
+│       ├── AlunoResource.php
+│       └── MatriculaResource.php
 ├── Models/
 │   ├── Aluno.php
 │   └── Matricula.php

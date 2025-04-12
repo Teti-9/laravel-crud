@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreAlunoRequest;
+use App\Http\Resources\AlunoResource;
 use App\Http\Controllers\Controller;
 use App\Models\Aluno;
 
@@ -19,22 +20,7 @@ class AlunoController extends Controller
             ], 404);
         }
 
-        return response()->json($alunos->map(function ($aluno) {
-            return [
-                'ID' => $aluno->id,
-                'Nome' => $aluno->nome,
-                'Nascimento' => $aluno->data_de_nascimento,
-                'Telefone' => $aluno->telefone,
-                'CEP' => $aluno->endereco_cep,
-                'Matrícula' => $aluno->matricula ? [
-                    'ID' => $aluno->matricula->id,
-                    'Plano (Dias)' => $aluno->matricula->tipo_do_plano,
-                    'Status' => $aluno->matricula->status_da_matricula,
-                    'Matrícula' => $aluno->matricula->matricula_formatada,
-                    'Vencimento' => $aluno->matricula->vencimento_formatado,
-                ] : 'Não há matrícula associada.',
-            ];
-        }));
+        return AlunoResource::collection($alunos);
     }
 
     public function store(StoreAlunoRequest $request)
@@ -55,22 +41,9 @@ class AlunoController extends Controller
     {
         try {
 
-            $aluno = Aluno::with('matricula')->findOrFail($id);
+            $aluno = Aluno::findOrFail($id);
 
-            return response()->json([
-                'ID' => $aluno->id,
-                'Nome' => $aluno->nome,
-                'Nascimento' => $aluno->data_de_nascimento,
-                'Telefone' => $aluno->telefone,
-                'CEP' => $aluno->endereco_cep,
-                'Matrícula' => $aluno->matricula ? [
-                    'ID' => $aluno->matricula->id,
-                    'Plano (Dias)' => $aluno->matricula->tipo_do_plano,
-                    'Status' => $aluno->matricula->status_da_matricula,
-                    'Matrícula' => $aluno->matricula->matricula_formatada,
-                    'Vencimento' => $aluno->matricula->vencimento_formatado,
-                ] : 'Não há matrícula associada.',
-            ]);
+            return new AlunoResource($aluno);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'message' => 'Aluno não encontrado.'

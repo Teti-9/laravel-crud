@@ -56,7 +56,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function displayAlunos(alunos) {
+    function displayAlunos(response) {
+        const alunos = response.data || [];
+
         if (!alunos || alunos.length === 0) {
             alunosList.innerHTML = '<p>Nenhum aluno cadastrado.</p>';
             return;
@@ -71,9 +73,9 @@ document.addEventListener('DOMContentLoaded', function () {
           ${aluno.Matrícula && typeof aluno.Matrícula === 'object' ? `
             <div class="matricula-info">
                 <p><strong>Plano:</strong> ${aluno.Matrícula['Plano (Dias)']} dias</p>
-                <p><strong>Status:</strong> ${aluno.Matrícula['Status']}</p>
-                <p><strong>Matrícula:</strong> ${aluno.Matrícula['Matrícula']}</p>
-                <p><strong>Vencimento:</strong> ${aluno.Matrícula['Vencimento']}</p>
+                <p><strong>Status:</strong> ${aluno.Matrícula.Status}</p>
+                <p><strong>Matrícula:</strong> ${aluno.Matrícula.Matrícula}</p>
+                <p><strong>Vencimento:</strong> ${aluno.Matrícula.Vencimento}</p>
             </div>
           ` : '<p class="matricula-info">Não há matrícula associada.</p>'}
           <div class="card-actions">
@@ -81,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <button class="danger delete-aluno" data-id="${aluno.ID}">Deletar</button>
           </div>
         </div>
-      `).join('');
+        `).join('');
     }
 
     alunoForm.addEventListener('submit', async function (e) {
@@ -128,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     searchAlunoBtn.addEventListener('click', async () => {
-        const searchTerm = searchAlunoInput.value;
+        const searchTerm = searchAlunoInput.value.trim();
         if (!searchTerm) {
             fetchAlunos();
             return;
@@ -136,9 +138,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             const response = await fetch(`${ALUNOS_API}/${searchTerm}`);
-            const alunos = await response.json();
-            displayAlunos(Array.isArray(alunos) ? alunos : [alunos]);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            const alunos = result.data ? [result.data] : [result];
+
+            displayAlunos({ data: alunos });
+
         } catch (error) {
+            console.error('Search error:', error);
+            alunosList.innerHTML = `
+            <div class="error-card">
+                <h3>Aluno não encontrado</h3>
+            </div>
+        `;
         }
     });
 
@@ -152,36 +169,42 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function displayMatriculas(matriculas) {
+    function displayMatriculas(response) {
+        const matriculas = response.data || [];
+
         if (!matriculas || matriculas.length === 0) {
             matriculasList.innerHTML = '<p>Nenhuma matrícula cadastrada.</p>';
             return;
         }
 
         matriculasList.innerHTML = matriculas.map(matricula => `
-        <div class="card" data-id="${matricula['ID Da Matrícula']}">
-          <h3>ID Aluno: ${matricula.Aluno.ID} - Nome: ${matricula.Aluno.Nome}</h3>
-          <p><strong>Plano:</strong> ${matricula['Plano (Dias)']} dias</p>
+        <div class="card" data-id="${matricula["ID Da Matrícula"]}">
+          <h3>ID Aluno: ${matricula.Aluno.ID} - Nome: ${matricula.Aluno.Nome || 'N/A'}</h3>
+          <p><strong>Plano:</strong> ${matricula["Plano (Dias)"]} dias</p>
           <p><strong>Status:</strong> ${matricula.Status}</p>
-            <p><strong>Matrícula:</strong> ${matricula.Matrícula}</p>
+          <p><strong>Matrícula:</strong> ${matricula.Matrícula}</p>
           <p><strong>Vencimento:</strong> ${matricula.Vencimento}</p>
           <div class="card-actions">
-            <button class="primary edit-matricula" data-id="${matricula['ID Da Matrícula']}">Editar</button>
-            <button class="danger delete-matricula" data-id="${matricula['ID Da Matrícula']}">Deletar</button>
+            <button class="primary edit-matricula" data-id="${matricula["ID Da Matrícula"]}">Editar</button>
+            <button class="danger delete-matricula" data-id="${matricula["ID Da Matrícula"]}">Deletar</button>
           </div>
         </div>
-      `).join('');
+        `).join('');
     }
 
     async function loadAlunosForDropdown() {
         try {
             const response = await fetch(ALUNOS_API);
-            const alunos = await response.json();
+            const { data: alunos } = await response.json();
 
             alunoSelect.innerHTML = alunos.map(aluno =>
                 `<option value="${aluno.ID}">${aluno.Nome}</option>`
             ).join('');
+
+            alunoSelect.innerHTML = `<option value="">Selecione um aluno</option>` + alunoSelect.innerHTML;
         } catch (error) {
+            console.error('Erro ao carregar alunos:', error);
+            alunoSelect.innerHTML = `<option value="">Erro ao carregar alunos</option>`;
         }
     }
 
@@ -229,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     searchMatriculaBtn.addEventListener('click', async () => {
-        const searchTerm = searchMatriculaInput.value;
+        const searchTerm = searchMatriculaInput.value.trim();
         if (!searchTerm) {
             fetchMatriculas();
             return;
@@ -237,9 +260,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             const response = await fetch(`${MATRICULAS_API}/${searchTerm}`);
-            const matriculas = await response.json();
-            displayMatriculas(Array.isArray(matriculas) ? matriculas : [matriculas]);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            const matriculas = result.data ? [result.data] : [result];
+
+            displayMatriculas({ data: matriculas });
+
         } catch (error) {
+            console.error('Matrícula search error:', error);
+            matriculasList.innerHTML = `
+                <div class="error-card">
+                    <h3>Matrícula não encontrada</h3>
+                </div>
+            `;
         }
     });
 
@@ -301,13 +339,21 @@ document.addEventListener('DOMContentLoaded', function () {
             const id = e.target.getAttribute('data-id');
             try {
                 const response = await fetch(`${MATRICULAS_API}/${id}`);
-                const matricula = await response.json();
+                if (!response.ok) throw new Error('Failed to fetch matrícula');
+
+                const result = await response.json();
+                const matricula = result.data;
+
+                if (!matricula) throw new Error('Matrícula not found');
 
                 document.getElementById('matriculaId').value = matricula['ID Da Matrícula'];
-                document.getElementById('aluno_id').value = matricula.aluno_id;
-                document.getElementById('tipo_do_plano').value = matricula.tipo_do_plano;
+                document.getElementById('aluno_id').value = matricula.Aluno.ID;
+                document.getElementById('tipo_do_plano').value = matricula['Plano (Dias)'];
+
                 document.querySelector('[data-tab="matriculas"]').click();
             } catch (error) {
+                console.error('Error loading matrícula:', error);
+                alert('Erro ao carregar matrícula: ' + error.message);
             }
         }
     });
